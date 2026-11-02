@@ -13,9 +13,18 @@ export default async function HomePage() {
   const locale = await getLocale();
   const t = getDictionary(locale);
 
-  const workItems = await prisma.workItem.findMany();
-  const people = await prisma.person.findMany();
-  const completions = await prisma.completion.findMany();
+  let workItems: Awaited<ReturnType<typeof prisma.workItem.findMany>> = [];
+  let people: Awaited<ReturnType<typeof prisma.person.findMany>> = [];
+  let completions: Awaited<ReturnType<typeof prisma.completion.findMany>> = [];
+  let dbError = false;
+
+  try {
+    workItems = await prisma.workItem.findMany();
+    people = await prisma.person.findMany();
+    completions = await prisma.completion.findMany();
+  } catch {
+    dbError = true;
+  }
 
   const released = workItems.filter((w) => w.stage === "released");
   const inTest = workItems.filter((w) =>
@@ -42,6 +51,13 @@ export default async function HomePage() {
       <header>
         <h1 className="font-display text-4xl text-ink">{t.home.headline}</h1>
         <p className="mt-2 text-cocoa/80">{t.home.sub}</p>
+        {dbError ? (
+          <p className="mt-4 rounded-xl border border-caramel/40 bg-caramel/10 px-4 py-3 text-sm text-cocoa">
+            {locale === "vi"
+              ? "Không kết nối được cơ sở dữ liệu. Thêm DATABASE_URL trên Vercel, chạy migrate và seed."
+              : "Database unavailable. Set DATABASE_URL on Vercel, then run migrate and seed."}
+          </p>
+        ) : null}
       </header>
 
       <section className="grid gap-4 sm:grid-cols-3">
