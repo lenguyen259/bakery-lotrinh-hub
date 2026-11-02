@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-paper: #f3ecdf;
+  --color-ink: #1c1410;
+  --color-cocoa: #3b2416;
+  --color-caramel: #c47b3a;
+  --color-pandan: #2f6f5e;
+  --color-clay: #9b3a2f;
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+.font-display {
+  font-family: var(--font-display), serif;
+}

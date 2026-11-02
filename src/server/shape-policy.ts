@@ -1,0 +1,39 @@
+import { z } from "zod";
+
+export const shapeSchema = z.object({
+  title: z.string(),
+  area: z.enum(["ops", "finance", "mfg", "sales", "cross"]),
+  story_en: z.string(),
+  story_vi: z.string(),
+  acceptance: z.tuple([z.string(), z.string(), z.string()]),
+  confidence: z.number(),
+  missing_info: z.array(z.string()),
+});
+
+export type ShapeOutput = z.infer<typeof shapeSchema>;
+
+const VND_IN_TEXT =
+  /(?:₫|\b\d{1,3}(?:[.,]\d{3})+\s*(?:đ|VND|vnd)\b|\b\d{6,}\s*(?:đ|VND|vnd)\b)/i;
+
+export function ideaHadMoneyMention(ideaBody: string): boolean {
+  return VND_IN_TEXT.test(ideaBody);
+}
+
+export function shapeOutputHasInventedImpact(
+  ideaBody: string,
+  shaped: ShapeOutput,
+): boolean {
+  if (ideaHadMoneyMention(ideaBody)) {
+    return false;
+  }
+  const blob = JSON.stringify(shaped);
+  return VND_IN_TEXT.test(blob);
+}
+
+export function isTooVague(confidence: number): boolean {
+  return confidence < 0.4;
+}
+
+export function canAcceptIdea(confidence: number | null | undefined): boolean {
+  return confidence != null && confidence >= 0.4;
+}

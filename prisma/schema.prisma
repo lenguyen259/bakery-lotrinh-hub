@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Person {
+  id       String  @id
+  name     String
+  role     String
+  outletId String? @map("outlet_id")
+  ideas    Idea[]
+  completions Completion[]
+
+  @@map("person")
+}
+
+model WorkItem {
+  id                  String   @id
+  title               String
+  area                String
+  stage               String
+  sourceRequirementId String?  @map("source_requirement_id")
+  storyEn             String?  @map("story_en")
+  storyVi             String?  @map("story_vi")
+  acceptance          Json?
+  riceReach           Int?     @map("rice_reach")
+  riceImpact          Int?     @map("rice_impact")
+  riceConfidence      Int?     @map("rice_confidence")
+  riceEffort          Int?     @map("rice_effort")
+  externalUrl         String?  @map("external_url")
+  updatedAt           DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  ideas               Idea[]
+
+  @@map("work_item")
+}
+
+model Idea {
+  id          String   @id
+  authorId    String   @map("author_id")
+  author      Person   @relation(fields: [authorId], references: [id])
+  body        String
+  locale      String
+  status      String
+  confidence  Decimal? @db.Decimal
+  missingInfo Json?    @map("missing_info")
+  shapedJson  Json?    @map("shaped_json")
+  workItemId  String?  @map("work_item_id")
+  workItem    WorkItem? @relation(fields: [workItemId], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("idea")
+}
+
+model Report {
+  id           String    @id
+  weekStart    DateTime  @map("week_start") @db.Date
+  status       String
+  body         Json?
+  mode         String?
+  failureFlags String[]  @default([]) @map("failure_flags")
+  publishedAt  DateTime? @map("published_at") @db.Timestamptz(6)
+  decisions    Decision[]
+
+  @@map("report")
+}
+
+model Decision {
+  id       String   @id
+  reportId String   @map("report_id")
+  report   Report   @relation(fields: [reportId], references: [id])
+  text     String
+  madeBy   String   @map("made_by")
+  at       DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("decision")
+}
+
+model Module {
+  id          String     @id
+  titleEn     String     @map("title_en")
+  titleVi     String     @map("title_vi")
+  bodyEn      String     @map("body_en")
+  bodyVi      String     @map("body_vi")
+  sortOrder   Int        @map("sort_order")
+  questions   Question[]
+  completions Completion[]
+
+  @@map("module")
+}
+
+model Question {
+  id           String @id
+  moduleId     String @map("module_id")
+  module       Module @relation(fields: [moduleId], references: [id])
+  promptEn     String @map("prompt_en")
+  promptVi     String @map("prompt_vi")
+  choicesEn    Json   @map("choices_en")
+  choicesVi    Json   @map("choices_vi")
+  correctIndex Int    @map("correct_index")
+
+  @@map("question")
+}
+
+model Completion {
+  personId    String   @map("person_id")
+  person      Person   @relation(fields: [personId], references: [id])
+  moduleId    String   @map("module_id")
+  module      Module   @relation(fields: [moduleId], references: [id])
+  score       Int
+  passed      Boolean
+  completedAt DateTime @map("completed_at") @db.Timestamptz(6)
+
+  @@id([personId, moduleId])
+  @@map("completion")
+}
+
+model AuditEvent {
+  id       String   @id
+  at       DateTime @default(now()) @db.Timestamptz(6)
+  actor    String
+  action   String
+  entity   String
+  entityId String   @map("entity_id")
+  detail   Json
+
+  @@map("audit_event")
+}
