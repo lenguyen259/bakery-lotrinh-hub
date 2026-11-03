@@ -1,5 +1,5 @@
 import { generateObject } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createLlmProvider, getAiModelId } from "@/lib/ai/provider";
 import { z } from "zod";
 import { shapeSchema, type ShapeOutput } from "@/server/shape-policy";
 import { type BriefBody } from "@/server/citations";
@@ -38,11 +38,8 @@ export function isAiConfigured(): boolean {
 async function callShapeModel(
   ideaBody: string,
 ): Promise<{ output: ShapeOutput; mode: AiMode }> {
-  const provider = createOpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-    baseURL: process.env.OPENAI_BASE_URL,
-  });
-  const model = provider(process.env.AI_MODEL ?? "gpt-4o-mini");
+  const provider = createLlmProvider();
+  const model = provider(getAiModelId());
   const { object } = await generateObject({
     model,
     schema: shapeSchema,
@@ -116,11 +113,8 @@ export async function draftBrief(
   }
 
   try {
-    const provider = createOpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-      baseURL: process.env.OPENAI_BASE_URL,
-    });
-    const model = provider(process.env.AI_MODEL ?? "gpt-4o-mini");
+    const provider = createLlmProvider();
+    const model = provider(getAiModelId());
     const { object } = await generateObject({
       model,
       schema: briefSchema,
