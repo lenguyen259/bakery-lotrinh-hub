@@ -19,7 +19,7 @@ const beVietnam = Be_Vietnam_Pro({
 export const metadata: Metadata = {
   title: "Lộ trình — Portfolio hub",
   description:
-    "Portfolio demonstration backlog, roadmap, and leadership brief for Sharon JSC AI role.",
+    "Portfolio demo: backlog, roadmap, and leadership brief for a fictional bakery programme.",
 };
 
 export default function RootLayout({

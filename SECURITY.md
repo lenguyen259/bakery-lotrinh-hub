@@ -1,6 +1,6 @@
 # Security — Lộ Trình Hub
 
-Portfolio demonstration only. Not production Sharon infrastructure.
+Portfolio demonstration only. Not production operator infrastructure.
 
 ## Controls implemented
 

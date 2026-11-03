@@ -30,7 +30,7 @@ export const en: Dictionary = {
   },
   locale: "Tiếng Việt",
   disclaimer:
-    "Đây là bản minh hoạ portfolio cho vị trí AI Implementation Specialist tại Sharon JSC. Không phải hệ thống, sản phẩm hay thương hiệu vận hành chính thức của Sharon. Dữ liệu là dữ liệu giả lập cho một bếp bánh demo tại TP.HCM.",
+    "Portfolio demo for an anonymous bakery / F&B operations programme — not a live production system. Data is fictional for a demo kitchen in Ho Chi Minh City.",
   aiBanner: {
     demo: "Chế độ minh hoạ — chưa gọi mô hình",
     fallback: "Model error — using safe copy",

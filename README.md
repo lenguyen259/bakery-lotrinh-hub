@@ -1,6 +1,6 @@
 # Lộ Trình Hub — portfolio demo
 
-Leadership backlog, roadmap, weekly brief, idea shaping, training, and adoption for a fictional Sharon demo bakery group. Not an official Sharon system.
+Leadership backlog, roadmap, weekly brief, idea shaping, training, and adoption for a fictional demo bakery group. Not a live production system.
 
 ## What this proves (JD)
 
@@ -55,6 +55,6 @@ Production URL (after deploy): see `DEMO_URL.txt`.
 
 ## Disclaimer (verbatim)
 
-> Đây là bản minh hoạ portfolio cho vị trí AI Implementation Specialist tại Sharon JSC. Không phải hệ thống, sản phẩm hay thương hiệu vận hành chính thức của Sharon. Dữ liệu là dữ liệu giả lập cho một bếp bánh demo tại TP.HCM.
+> Bản minh hoạ portfolio cho chương trình bánh và F&B giả lập — không phải hệ thống sản xuất thật. Dữ liệu là giả lập cho bếp demo tại TP.HCM.
 
 See also `SECURITY.md` and `ARCHITECTURE.md`.
