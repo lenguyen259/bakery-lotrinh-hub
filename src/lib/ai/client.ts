@@ -1,8 +1,12 @@
 import { generateObject } from "ai";
 import { createLlmProvider, getAiModelId } from "@/lib/ai/provider";
 import { z } from "zod";
-import { shapeSchema, type ShapeOutput } from "@/server/shape-policy";
-import { type BriefBody } from "@/server/citations";
+import {
+  shapeSchema,
+  shapeOutputHasInventedImpact,
+  type ShapeOutput,
+} from "@/server/shape-policy";
+import { assertCitations, type BriefBody } from "@/server/citations";
 import {
   inventedImpactFixture,
   safeBriefFixture,
@@ -65,8 +69,14 @@ export async function shapeIdea(
   } else {
     try {
       const live = await callShapeModel(ideaBody);
-      shaped = live.output;
-      mode = live.mode;
+      if (shapeOutputHasInventedImpact(ideaBody, live.output)) {
+        shaped = shapeFixtureForIdea(ideaId);
+        mode = "fallback";
+        flags.push("INVENTED_IMPACT");
+      } else {
+        shaped = live.output;
+        mode = live.mode;
+      }
     } catch {
       shaped = shapeFixtureForIdea(ideaId);
       mode = "fallback";
@@ -103,6 +113,7 @@ const briefSchema = z.object({
 
 export async function draftBrief(
   workItemTitles: string[],
+  allowedIds: string[],
 ): Promise<{ body: BriefBody; mode: AiMode; flags: string[] }> {
   const flags: string[] = [];
   const demoMode = resolveDemoMode();
@@ -118,8 +129,13 @@ export async function draftBrief(
     const { object } = await generateObject({
       model,
       schema: briefSchema,
-      prompt: `Write a weekly leadership brief with exactly five bullets citing only real ids from: ${workItemTitles.join(", ")}`,
+      prompt: `Write a weekly leadership brief with exactly five bullets citing only real ids from: ${workItemTitles.join(", ")}. Every LT- id in text must appear in that list.`,
     });
+    const citation = assertCitations(object, allowedIds);
+    if (!citation.ok) {
+      flags.push("BAD_CITATION");
+      return { body: safeBriefFixture, mode: "fallback", flags };
+    }
     return { body: object, mode: "live", flags };
   } catch {
     flags.push("MODEL_ERROR");

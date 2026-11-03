@@ -24,6 +24,7 @@ export async function POST() {
 
   let { body, mode, flags } = await draftBrief(
     workItems.map((w) => `${w.id} ${w.title}`),
+    allowedIds,
   );
 
   const citation = assertCitations(body, allowedIds);
