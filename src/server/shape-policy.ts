@@ -30,6 +30,28 @@ export function shapeOutputHasInventedImpact(
   return VND_IN_TEXT.test(blob);
 }
 
+/** Rejects KPI-style numbers (%, counts) not present in the colleague note. */
+export function shapeOutputHasInventedMetrics(
+  ideaBody: string,
+  shaped: ShapeOutput,
+): boolean {
+  const blob = JSON.stringify(shaped);
+  if (!/%/.test(ideaBody) && /%/.test(blob)) {
+    return true;
+  }
+  const ideaDigits = new Set(ideaBody.match(/\d+/g) ?? []);
+  const outDigits = blob.match(/\d+/g) ?? [];
+  if (ideaDigits.size === 0 && outDigits.length > 0) {
+    return true;
+  }
+  for (const digit of outDigits) {
+    if (!ideaDigits.has(digit) && Number(digit) >= 15) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function isTooVague(confidence: number): boolean {
   return confidence < 0.4;
 }

@@ -4,6 +4,7 @@ import {
   canAcceptIdea,
   isTooVague,
   shapeOutputHasInventedImpact,
+  shapeOutputHasInventedMetrics,
   type ShapeOutput,
 } from "../src/server/shape-policy";
 
@@ -51,5 +52,18 @@ describe("shape policy", () => {
       shapeOutputHasInventedImpact("Hóa đơn 1250000 VND chưa khớp", shaped),
       false,
     );
+  });
+
+  it("flags invented percentage KPIs when idea had none", () => {
+    const shaped: ShapeOutput = {
+      title: "AI cakes",
+      area: "cross",
+      story_en: "Reduce waste by 15%",
+      story_vi: "Giảm hao",
+      acceptance: ["Production time down 15%", "b", "c"],
+      confidence: 0.8,
+      missing_info: [],
+    };
+    assert.equal(shapeOutputHasInventedMetrics("dùng AI cho bánh", shaped), true);
   });
 });

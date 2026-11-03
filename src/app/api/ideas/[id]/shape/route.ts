@@ -3,11 +3,7 @@ import { jsonError, jsonOk } from "@/lib/api-response";
 import { shapeIdea } from "@/lib/ai/client";
 import { getActorId, getDemoRole } from "@/lib/session";
 import { canShape } from "@/server/access";
-import {
-  isTooVague,
-  shapeOutputHasInventedImpact,
-} from "@/server/shape-policy";
-import { shapeFixtureForIdea } from "@/lib/ai/demo-fixtures";
+import { isTooVague } from "@/server/shape-policy";
 import { rateLimit } from "@/lib/rate-limit";
 import { randomUUID } from "node:crypto";
 
@@ -29,16 +25,7 @@ export async function POST(_request: Request, { params }: Params) {
   }
 
   const actor = await getActorId(role);
-  let { shaped, mode, flags } = await shapeIdea(id, idea.body);
-
-  if (shapeOutputHasInventedImpact(idea.body, shaped)) {
-    shaped = shapeFixtureForIdea(id);
-    if (id === "idea-vague" || shaped.confidence >= 0.4) {
-      // keep fixture
-    }
-    flags = [...flags, "INVENTED_IMPACT"];
-    mode = mode === "live" ? "fallback" : mode;
-  }
+  const { shaped, mode, flags } = await shapeIdea(id, idea.body);
 
   const confidence = Number(shaped.confidence);
   const tooVague = isTooVague(confidence);
@@ -49,7 +36,7 @@ export async function POST(_request: Request, { params }: Params) {
     data: {
       confidence,
       missingInfo: shaped.missing_info,
-      shapedJson: shaped,
+      shapedJson: tooVague ? undefined : shaped,
       status,
     },
   });

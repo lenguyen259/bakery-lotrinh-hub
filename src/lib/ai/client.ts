@@ -1,11 +1,8 @@
 import { generateObject } from "ai";
 import { createLlmProvider, getAiModelId } from "@/lib/ai/provider";
 import { z } from "zod";
-import {
-  shapeSchema,
-  shapeOutputHasInventedImpact,
-  type ShapeOutput,
-} from "@/server/shape-policy";
+import { shapeSchema, type ShapeOutput } from "@/server/shape-policy";
+import { finalizeShapedOutput } from "@/server/shape-finalize";
 import { assertCitations, type BriefBody } from "@/server/citations";
 import {
   inventedImpactFixture,
@@ -13,7 +10,7 @@ import {
   shapeFixtureForIdea,
 } from "@/lib/ai/demo-fixtures";
 
-export type AiMode = "demo" | "live" | "fallback";
+export type AiMode = "demo" | "live" | "fallback" | "deterministic";
 
 function resolveDemoMode(): "on" | "off" | "auto" {
   const raw = process.env.AI_DEMO_MODE ?? "auto";
@@ -47,7 +44,9 @@ async function callShapeModel(
   const { object } = await generateObject({
     model,
     schema: shapeSchema,
-    prompt: `Shape this colleague idea into a product story. Do not invent VND amounts.\n\n${ideaBody}`,
+    system:
+      "Shape colleague notes only. Do not invent percentages, KPIs, or VND amounts absent from the note. Keep confidence below 0.4 when the note lacks place, pain, and acceptance detail.",
+    prompt: ideaBody,
   });
   return { output: object, mode: "live" };
 }
@@ -60,35 +59,42 @@ export async function shapeIdea(
   const demoMode = resolveDemoMode();
   const hasKey = isAiConfigured();
 
-  let shaped: ShapeOutput;
+  if (ideaId === "idea-vague") {
+    const finalized = finalizeShapedOutput(ideaId, ideaBody, shapeFixtureForIdea(ideaId));
+    return {
+      shaped: finalized.shaped,
+      mode: "deterministic",
+      flags: finalized.flags,
+    };
+  }
+
+  let candidate: ShapeOutput;
   let mode: AiMode = "demo";
 
   if (demoMode === "on" || (demoMode === "auto" && !hasKey)) {
-    shaped = shapeFixtureForIdea(ideaId);
+    candidate = shapeFixtureForIdea(ideaId);
     mode = "demo";
   } else {
     try {
       const live = await callShapeModel(ideaBody);
-      if (shapeOutputHasInventedImpact(ideaBody, live.output)) {
-        shaped = shapeFixtureForIdea(ideaId);
-        mode = "fallback";
-        flags.push("INVENTED_IMPACT");
-      } else {
-        shaped = live.output;
-        mode = live.mode;
-      }
+      candidate = live.output;
+      mode = live.mode;
     } catch {
-      shaped = shapeFixtureForIdea(ideaId);
+      candidate = shapeFixtureForIdea(ideaId);
       mode = "fallback";
       flags.push("MODEL_ERROR");
     }
   }
 
-  if (shaped.confidence >= 0.4 && ideaId !== "idea-vague") {
-    // keep fixture confidence for known demos
+  const finalized = finalizeShapedOutput(ideaId, ideaBody, candidate);
+  if (finalized.flags.length > 0) {
+    flags.push(...finalized.flags);
+    if (mode === "live") {
+      mode = "fallback";
+    }
   }
 
-  return { shaped, mode, flags };
+  return { shaped: finalized.shaped, mode, flags };
 }
 
 const briefSchema = z.object({

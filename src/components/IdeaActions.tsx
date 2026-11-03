@@ -9,12 +9,19 @@ export function IdeaActions({
   canAccept,
   hasShape,
   confidenceOk,
+  labels,
 }: {
   ideaId: string;
   canShape: boolean;
   canAccept: boolean;
   hasShape: boolean;
   confidenceOk: boolean;
+  labels: {
+    shape: string;
+    accept: string;
+    tooVague: string;
+    shapedOk: string;
+  };
 }) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
@@ -30,7 +37,9 @@ export function IdeaActions({
       setMessage(json.error?.message_vi ?? "Lỗi");
       return;
     }
-    setMessage(json.data.tooVague ? json.data.message_vi : "Đã định hình");
+    setMessage(
+      json.data.tooVague ? labels.tooVague : labels.shapedOk,
+    );
     router.refresh();
   }
 
@@ -49,28 +58,34 @@ export function IdeaActions({
   }
 
   return (
-    <div className="mt-3 flex flex-wrap gap-2">
-      {canShape ? (
-        <button
-          type="button"
-          onClick={shape}
-          disabled={loading}
-          className="rounded-full bg-caramel px-4 py-2 text-sm text-paper"
-        >
-          Định hình
-        </button>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-wrap gap-2">
+        {canShape ? (
+          <button
+            type="button"
+            onClick={shape}
+            disabled={loading}
+            className="rounded-md bg-caramel px-4 py-2 text-sm font-medium text-paper hover:bg-caramel/90 disabled:opacity-60"
+          >
+            {labels.shape}
+          </button>
+        ) : null}
+        {canAccept && hasShape && confidenceOk ? (
+          <button
+            type="button"
+            onClick={accept}
+            disabled={loading}
+            className="rounded-md bg-pandan px-4 py-2 text-sm font-medium text-paper hover:bg-pandan/90 disabled:opacity-60"
+          >
+            {labels.accept}
+          </button>
+        ) : null}
+      </div>
+      {message ? (
+        <p className="text-sm text-cocoa/80" role="status">
+          {message}
+        </p>
       ) : null}
-      {canAccept && hasShape && confidenceOk ? (
-        <button
-          type="button"
-          onClick={accept}
-          disabled={loading}
-          className="rounded-full bg-pandan px-4 py-2 text-sm text-paper"
-        >
-          Đưa lên bảng
-        </button>
-      ) : null}
-      {message ? <p className="text-sm text-cocoa">{message}</p> : null}
     </div>
   );
 }
